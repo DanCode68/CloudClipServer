@@ -2,6 +2,7 @@ package ninja.jamessmith.cloudclip;
 
 import java.io.IOException;
 
+import javax.servlet.AsyncContext;
 import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -9,8 +10,6 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import org.json.simple.JSONObject;
 
 /**
  * Servlet implementation class ServiceServlet
@@ -30,7 +29,7 @@ public class ServiceServlet extends HttpServlet {
 	static final String SESSION_HEADER = "session";
 	static final String CLIP_HEADER = "clip";
 	
-	private ContextManager manager;
+	private SessionManager manager;
        
     /**
      * @see HttpServlet#HttpServlet()
@@ -44,7 +43,7 @@ public class ServiceServlet extends HttpServlet {
 	 * @see Servlet#init(ServletConfig)
 	 */
 	public void init(ServletConfig config) throws ServletException {
-		manager = new ContextManager();
+		manager = new SessionManager();
 	}
 
 	/**
@@ -106,7 +105,7 @@ public class ServiceServlet extends HttpServlet {
 		}
 		else {
 			try {
-				manager.addContext(session, req.startAsync());
+				manager.addSession(session, req.startAsync());
 			} catch (IllegalStateException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -125,12 +124,23 @@ public class ServiceServlet extends HttpServlet {
 			resp.setStatus(401);
 		}
 		else {
-			manager.removeContext(session, uuid);
+			manager.removeSession(session, uuid);
 		}
 	}
 	
 	private void doFetch(HttpServletRequest req, HttpServletResponse resp) {
+		String session = req.getHeader(SESSION_HEADER);
+		String uuid = req.getHeader(UUID_HEADER);
 		
+		try {
+			manager.fetch(session, uuid, req.startAsync());
+		} catch (IllegalStateException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	private void doRemove(HttpServletRequest req, HttpServletResponse resp) {
