@@ -133,7 +133,9 @@ public class ServiceServlet extends HttpServlet {
 		String uuid = req.getHeader(UUID_HEADER);
 		
 		try {
-			manager.fetch(session, uuid, req.startAsync());
+			AsyncContext context = req.startAsync();
+			context.setTimeout(0);
+			manager.fetch(session, uuid, context);
 		} catch (IllegalStateException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
